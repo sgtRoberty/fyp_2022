@@ -1,14 +1,24 @@
 install.packages(c("seqinr", "ape", "paleotree"))
+
+######Convert fasta to nexus#####
 library(seqinr)
 library(ape)
 
-######Convert fasta to nexus#####
 convt <- function(filename, datatype) {
   data = read.fasta(filename)
   for (x in 1:length(data)){#Remove stop codon (*) that cannot be read by MrBayes
     for (y in 1:length(data[[x]])){
       if (data[[x]][y] == "*"){
         data[[x]][y] = "-"
+      }
+      else if (data[[x]][y] == "j"){
+        data[[x]][y] = "(i,l)"
+      }
+      else if (data[[x]][y] == "b"){
+        data[[x]][y] = "(d,n)"
+      }
+      else if (data[[x]][y] == "z"){
+        data[[x]][y] = "(e,q)"
       }
     }
   } 
@@ -24,15 +34,73 @@ backbone_mtaa <- ape::read.tree("../data/5_backbone_mtaa.tre")
 backbone_mtaa$node.label <- NULL
 
 #####Convert newick to nexus#####
-convttree <- function(filename){
+.getTreesFromDotdotdot <- function(...)
+{
+  obj <- list(...)
+  if (length(obj) == 1 && !inherits(obj[[1]], "phylo")) obj <- obj[[1]]
+  obj
+}
+
+write.nexus.tree <- function(..., file = "", translate = TRUE)
+{
+  obj <- .getTreesFromDotdotdot(...)
+  ntree <- length(obj)
+  cat("#NEXUS\n", file = file)
+  cat(paste("[R-package APE, ", date(), "]\n\n", sep = ""),
+      file = file, append = TRUE)
+  
+  N <- length(obj[[1]]$tip.label)
+  
+  cat("BEGIN TREES;\n", file = file, append = TRUE)
+  if (translate) {
+    cat("\tTRANSLATE\n", file = file, append = TRUE)
+    obj <- .compressTipLabel(obj)
+    X <- paste("\t\t", 1:N, "\t", attr(obj, "TipLabel"), ",", sep = "")
+    ## We remove the last comma:
+    X[length(X)] <- gsub(",", "", X[length(X)])
+    cat(X, file = file, append = TRUE, sep = "\n")
+    cat("\t;\n", file = file, append = TRUE)
+    class(obj) <- NULL
+    for (i in 1:ntree)
+      obj[[i]]$tip.label <- as.character(1:N)
+  } else {
+    if (is.null(attr(obj, "TipLabel"))) {
+      for (i in 1:ntree)
+        obj[[i]]$tip.label <- checkLabel(obj[[i]]$tip.label)
+    } else {
+      attr(obj, "TipLabel") <- checkLabel(attr(obj, "TipLabel"))
+      obj <- .uncompressTipLabel(obj)
+    }
+  }
+  
+  title <- names(obj)
+  if (is.null(title))
+    title <- rep("UNTITLED", ntree)
+  else {
+    if (any(s <- title == "")) title[s] <- "UNTITLED"
+  }
+  
+  for (i in 1:ntree) {
+    if (class(obj[[i]]) != "phylo") next
+    root.tag <- if (is.rooted(obj[[i]])) "= [&R] " else "= [&U] "
+    cat("\tTREE *", title[i], root.tag, file = file, append = TRUE)
+    cat(write.tree(obj[[i]], file = ""),
+        "\n", sep = "", file = file, append = TRUE)
+  }
+  cat("END;\n", file = file, append = TRUE)
+}
+
+convttree <- function(filename, translate){
   data <- ape::read.tree(filename)
   data$node.label <- NULL #Remove branch labels that cannot be read by MrBayes
   filename = substr(filename, 1, nchar(filename)-3)
-  ape::write.nexus(data, file=paste(filename, "nex", sep=""))
+  write.nexus.tree(data, file=paste(filename, "nex", sep=""),
+                   translate = translate)
 }
 
-convttree("../data/5_backbone_mtaa.tre")
-convttree("../data/5_backbone_v3_multifurcatingconsensus_2022-02-16_TJCauto_GBMID.tre")
+convttree("../data/5_backbone_mtaa.tre", translate = T)
+convttree("../data/5_backbone_v3_multifurcatingconsensus_2022-02-16_TJCauto_GBMID.tre",
+          translate = T)
 
 ######Subset aa_supermatrix data for analysis#####
 read.fasta.protein <- function(filename){ #read.fasta modified to omit stop codon (*)
@@ -42,6 +110,15 @@ read.fasta.protein <- function(filename){ #read.fasta modified to omit stop codo
       if (data[[x]][y] == "*"){
         data[[x]][y] = "-"
       }
+      else if (data[[x]][y] == "j"){
+        data[[x]][y] = "(i,l)"
+      }
+      else if (data[[x]][y] == "b"){
+        data[[x]][y] = "(d,n)"
+      }
+      else if (data[[x]][y] == "z"){
+        data[[x]][y] = "(e,q)"
+      }
     }
   }
   return(data)
@@ -50,6 +127,7 @@ read.fasta.protein <- function(filename){ #read.fasta modified to omit stop codo
 aa_supermatrix <- read.fasta.protein("../data/5_aa_supermatrix.fasta")
 backbone_mtaa <- ape::read.tree("../data/5_backbone_mtaa.tre")
 backbone_nuclear <- ape::read.tree("../data/5_backbone_v3_multifurcatingconsensus_2022-02-16_TJCauto_GBMID.tre")
+
 typeof(aa_supermatrix)
 typeof(backbone_mtaa)
 
