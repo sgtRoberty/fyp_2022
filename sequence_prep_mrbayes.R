@@ -1,4 +1,5 @@
-install.packages(c("seqinr", "ape", "paleotree"))
+install.packages(c("seqinr", "ape", "paleotree", "BiocManager"))
+BiocManager::install("ggtree")
 
 ######Convert fasta to nexus#####
 library(seqinr)
@@ -83,7 +84,7 @@ write.nexus.tree <- function(..., file = "", translate = TRUE)
   for (i in 1:ntree) {
     if (class(obj[[i]]) != "phylo") next
     root.tag <- if (is.rooted(obj[[i]])) "= [&R] " else "= [&U] "
-    cat("\tTREE *", title[i], root.tag, file = file, append = TRUE)
+    cat("\tTREE", title[i], root.tag, file = file, append = TRUE)
     cat(write.tree(obj[[i]], file = ""),
         "\n", sep = "", file = file, append = TRUE)
   }
@@ -94,7 +95,7 @@ convttree <- function(filename, translate){
   data <- ape::read.tree(filename)
   data$node.label <- NULL #Remove branch labels that cannot be read by MrBayes
   filename = substr(filename, 1, nchar(filename)-3)
-  write.nexus.tree(data, file=paste(filename, "nex", sep=""),
+  write.nexus.tree(data, file = paste(filename, "nex", sep=""),
                    translate = translate)
 }
 
@@ -145,3 +146,33 @@ library(paleotree)
 ?createMrBayesConstraints
 createMrBayesConstraints(backbone_nuclear, partial = TRUE,
                          file = "../data/5_backbone_nuclear_constraints.nex")
+
+#####Tree manipulation#####
+library(ggtree)
+#Tree visualisation
+backbone_mtaa <- ape::read.tree("../data/5_backbone_mtaa.tre")
+backbone_mtaa$node.label <- NULL
+
+ggtree(backbone_mtaa) + geom_text2(aes(label=label, subset=!isTip), hjust=-.2) +
+  geom_point2(aes(subset=!isTip), color="red", size=1)
+
+#Tree subsetting
+subset.tree <- function(filename, number){
+  tree <- ape::read.tree(filename)
+  tree$node.label <- NULL
+  subset <- keep.tip(tree, sample(tree$tip.label, number))
+  graph <- ggtree(subset) + geom_text2(aes(label=label, subset=!isTip), hjust=-.2) +
+    geom_point2(aes(subset=!isTip), color="red", size=1)
+  filename = substr(filename, 1, nchar(filename)-4)
+  write.nexus.tree(subset, file = paste(filename, "_", number, "subset.nex", sep=""))
+  return(graph)
+}
+
+
+subset.tree("../data/5_backbone_mtaa.tre", 200)
+subset.tree("../data/5_backbone_mtaa.tre", 100)
+subset.tree("../data/5_backbone_mtaa.tre", 50)
+
+cynmix <- ape::read.nexus("../data/cynmix.nex.con.tre")
+cynmix <- keep.tip(cynmix, sample(cynmix$tip.label, 15))
+write.nexus.tree(cynmix, file = "../data/cynmix_15subset.nex")
