@@ -30,10 +30,6 @@ convt <- function(filename, datatype) {
 
 convt("../data/5_aa_supermatrix.fasta", datatype = "protein")
 
-#####Remove branch labels#####
-backbone_mtaa <- ape::read.tree("../data/5_backbone_mtaa.tre")
-backbone_mtaa$node.label <- NULL
-
 #####Convert newick to nexus#####
 .getTreesFromDotdotdot <- function(...)
 {
@@ -41,8 +37,7 @@ backbone_mtaa$node.label <- NULL
   if (length(obj) == 1 && !inherits(obj[[1]], "phylo")) obj <- obj[[1]]
   obj
 }
-
-write.nexus.tree <- function(..., file = "", translate = TRUE)
+write.nexus.tree <- function(..., file = "", name = "", translate = TRUE)
 {
   obj <- .getTreesFromDotdotdot(...)
   ntree <- length(obj)
@@ -74,7 +69,12 @@ write.nexus.tree <- function(..., file = "", translate = TRUE)
     }
   }
   
-  title <- names(obj)
+  if (name == ""){
+    title <- names(obj)
+  }
+  else if (name != ""){
+    title <- name
+  }
   if (is.null(title))
     title <- rep("UNTITLED", ntree)
   else {
@@ -88,20 +88,21 @@ write.nexus.tree <- function(..., file = "", translate = TRUE)
     cat(write.tree(obj[[i]], file = ""),
         "\n", sep = "", file = file, append = TRUE)
   }
+  
   cat("END;\n", file = file, append = TRUE)
 }
 
-convttree <- function(filename, translate){
+convttree <- function(filename, name = "", translate){
   data <- ape::read.tree(filename)
   data$node.label <- NULL #Remove branch labels that cannot be read by MrBayes
   filename = substr(filename, 1, nchar(filename)-3)
   write.nexus.tree(data, file = paste(filename, "nex", sep=""),
-                   translate = translate)
+                   name = name, translate = translate)
 }
 
-convttree("../data/5_backbone_mtaa.tre", translate = T)
+convttree("../data/5_backbone_mtaa.tre", "mtaa", translate = T)
 convttree("../data/5_backbone_v3_multifurcatingconsensus_2022-02-16_TJCauto_GBMID.tre",
-          translate = T)
+          name = "nuclear_consensus", translate = T)
 
 ######Subset aa_supermatrix data for analysis#####
 read.fasta.protein <- function(filename){ #read.fasta modified to omit stop codon (*)
@@ -127,6 +128,7 @@ read.fasta.protein <- function(filename){ #read.fasta modified to omit stop codo
 
 aa_supermatrix <- read.fasta.protein("../data/5_aa_supermatrix.fasta")
 backbone_mtaa <- ape::read.tree("../data/5_backbone_mtaa.tre")
+backbone_mtaa$node.label <- NULL #Remove branch labels
 backbone_nuclear <- ape::read.tree("../data/5_backbone_v3_multifurcatingconsensus_2022-02-16_TJCauto_GBMID.tre")
 
 typeof(aa_supermatrix)
@@ -141,6 +143,21 @@ subsetted <- c(included, random)
 write.nexus.data(subsetted, file="../data/5_aa_supermatrix_1000subset.nex",
                  format="protein")
 
+#####Add tips at random to the tree#####
+library(phytools)
+mtaa_1000 <- add.random(backbone_mtaa, tips = names(random))
+ggtree(mtaa_1000) + geom_text2(aes(label=label, subset=!isTip), hjust=-.2) +
+  geom_point2(aes(subset=!isTip), color="red", size=1)
+
+mtaa_5682 <- add.random(backbone_mtaa, tips = names(excluded))
+ggtree(mtaa_5682) + geom_text2(aes(label=label, subset=!isTip), hjust=-.2) +
+  geom_point2(aes(subset=!isTip), color="red", size=1)
+
+write.nexus.tree(mtaa_1000, file = "../data/mtaa_1000_random.nex", 
+                 name = "mtaa_1000_random")
+write.nexus.tree(mtaa_5682, file = "../data/mtaa_5000.nex", 
+                 name = "mtaa_5000")
+
 #####Create backbone constraints for MrBayes#####
 library(paleotree)
 ?createMrBayesConstraints
@@ -151,28 +168,38 @@ createMrBayesConstraints(backbone_nuclear, partial = TRUE,
 library(ggtree)
 #Tree visualisation
 backbone_mtaa <- ape::read.tree("../data/5_backbone_mtaa.tre")
-backbone_mtaa$node.label <- NULL
+backbone_mtaa$node.label <- NULL#Remove branch labels
 
 ggtree(backbone_mtaa) + geom_text2(aes(label=label, subset=!isTip), hjust=-.2) +
   geom_point2(aes(subset=!isTip), color="red", size=1)
 
 #Tree subsetting
-subset.tree <- function(filename, number){
+subset.tree <- function(filename, number, name){
   tree <- ape::read.tree(filename)
   tree$node.label <- NULL
   subset <- keep.tip(tree, sample(tree$tip.label, number))
   graph <- ggtree(subset) + geom_text2(aes(label=label, subset=!isTip), hjust=-.2) +
     geom_point2(aes(subset=!isTip), color="red", size=1)
   filename = substr(filename, 1, nchar(filename)-4)
-  write.nexus.tree(subset, file = paste(filename, "_", number, "subset.nex", sep=""))
+  write.nexus.tree(subset, file = paste(filename, "_", number, "subset.nex", sep=""),
+                   name = name)
   return(graph)
-}
+}#Subset trees in Newick format
 
+subset.tree("../data/5_backbone_mtaa.tre", 200, name = "mtaa_200")
+subset.tree("../data/5_backbone_mtaa.tre", 100, "mtaa_100")
+subset.tree("../data/5_backbone_mtaa.tre", 50, "mtaa_50")
 
-subset.tree("../data/5_backbone_mtaa.tre", 200)
-subset.tree("../data/5_backbone_mtaa.tre", 100)
-subset.tree("../data/5_backbone_mtaa.tre", 50)
+subset.tree.nex <- function(filename, number, name){
+  tree <- ape::read.nexus(filename)
+  tree$node.label <- NULL
+  subset <- keep.tip(tree, sample(tree$tip.label, number))
+  graph <- ggtree(subset) + geom_text2(aes(label=label, subset=!isTip), hjust=-.2) +
+    geom_point2(aes(subset=!isTip), color="red", size=1)
+  filename = substr(filename, 1, nchar(filename)-4)
+  write.nexus.tree(subset, file = paste(filename, "_", number, "subset.nex", sep=""),
+                   name = name)
+  return(graph)
+}#Subset trees in Nexus format
 
-cynmix <- ape::read.nexus("../data/cynmix.nex.con.tre")
-cynmix <- keep.tip(cynmix, sample(cynmix$tip.label, 15))
-write.nexus.tree(cynmix, file = "../data/cynmix_15subset.nex")
+subset.tree.nex("../data/cynmix.nex.con.tre", 15, "cynmix_15subset")
