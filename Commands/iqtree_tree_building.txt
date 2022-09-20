@@ -1,0 +1,43 @@
+## 5000 taxa supermatrix
+# Bare minimum (see section 10.9 of manual)
+# -ninit - number of starting parsimony trees
+# -ntop - number of top starting parsimony trees to optimise with ML
+# -nbest - number of ntop to start the ML tree search from
+# -nstop - max number of iterations that do not produce a better tree after which to stop ML tree search
+iqtree -fast -ninit 2 -ntop 1 -nbest 1 -nstop 1 -s 5_aa_supermatrix.fasta -T AUTO -ntmax 12 --prefix 6_aa_baremin_nosupp_nccons -Q 5_aa_partitionscheme.nex -g 5_backbone_v3_multifurcatingconsensus_2022-02-16_TJCauto_GBMID.tre
+
+# No bootstrapping
+iqtree -quiet -s 5_aa_supermatrix.fasta -T 3 --prefix 6_aa_IQ_nosupp_uncons -Q 5_aa_partitionscheme.nex
+iqtree -quiet -s 5_aa_supermatrix.fasta -T 11 --prefix 6_aa_IQ_nosupp_nccons -Q 5_aa_partitionscheme.nex -g 5_backbone_v3_multifurcatingconsensus_2022-02-16_TJCauto_GBMID.tre
+iqtree -quiet -s 5_aa_supermatrix.fasta -T AUTO -ntmax 20 --prefix 6_aa_IQ_nosupp_mtcons -Q 5_aa_partitionscheme.nex -g 5_backbone_mtaa.tre
+
+# Bootstrapping
+iqtree -B 1000 -alrt 1000 -abayes -lbp 1000 -bnni -quiet -s 5_aa_supermatrix.fasta -T 3 --prefix 6_aa_IQ_ultboot_uncons -Q 5_aa_partitionscheme.nex
+iqtree -B 1000 -alrt 1000 -abayes -lbp 1000 -bnni -quiet -s 5_aa_supermatrix.fasta -T 18 --prefix 6_aa_IQ_ultboot_nccons -Q 5_aa_partitionscheme.nex -g 5_backbone_v3_multifurcatingconsensus_2022-02-16_TJCauto_GBMID.tre
+iqtree -B 1000 -alrt 1000 -abayes -lbp 1000 -bnni -quiet -s 5_aa_supermatrix.fasta -T 3 --prefix 6_aa_IQ_ultboot_mtcons -Q 5_aa_partitionscheme.nex -g 5_backbone_mtaa.tre
+
+
+## 1000 subset data
+# Bare minimum
+iqtree -fast -ninit 2 -ntop 1 -nbest 1 -nstop 1 -s 5_aa_supermatrix_1000subset_raw.nex -T AUTO -ntmax 12 --prefix 6_aa_baremin_nosupp_nccons_1000subset -Q 5_aa_partitionscheme.nex -g 5_backbone_v3_multifurcatingconsensus_2022-02-16_TJCauto_GBMID.tre
+
+# Bootstrapping
+iqtree -B 1000 -alrt 1000 -abayes -lbp 1000 -bnni -s 5_aa_supermatrix_1000subset_raw.nex -T AUTO -ntmax 12 --prefix 6_aa_IQ_ultboot_uncons_1000subset -Q 5_aa_partitionscheme.nex
+iqtree -nstop 1 -B 1000 -alrt 1000 -abayes -lbp 1000 -bnni -s 5_aa_supermatrix_1000subset_raw.nex -T AUTO -ntmax 12 --prefix 6_aa_IQ_ultboot_uncons_1000subset -Q 5_aa_partitionscheme.nex
+
+
+## Test models for MrBayes
+iqtree -s 5_aa_supermatrix.fasta -m MF -mset mrbayes --prefix -p 5_aa_partitionscheme_nomodel.nex
+iqtree -s 5_aa_supermatrix.fasta -m TESTONLY -mset mrbayes --prefix -p 
+iqtree -s 5_aa_supermatrix.fasta -m TESTMERGEONLY -mset mrbayes --prefix -p 
+
+## Test models for MrBayes on 1000 subset data
+iqtree -s 5_aa_supermatrix_1000subset_raw.nex -m TESTONLY -mset mrbayes -T 10 --prefix 1000subset_modelselection -p 5_aa_partitionscheme_nomodel.nex
+iqtree -fast -ninit 2 -ntop 1 -nbest 1 -nstop 1 -s 5_aa_supermatrix_1000subset_raw.nex -m TESTONLY -mset mrbayes -T 10 --prefix 1000subset_modelselection -p 5_aa_partitionscheme_nomodel.nex
+
+## Test models for MrBayes on 493 subset data (backbone_mtaa)
+iqtree -s 5_aa_supermatrix_493subset_raw.nex -m TESTONLY -mset mrbayes -T 10 --prefix 493subset_modelselection -p 5_aa_partitionscheme_nomodel.nex
+
+
+## Estimate branch lengths for 5709taxa_GlobalMalaise_supermatrix.fasta & malaise_noname.tre
+iqtree -T AUTO -ntmax 16 -keep-ident -s ../../5709taxa_GlobalMalaise_supermatrix.fasta -te ../../malaise_noname.tre -Q ../../5709taxa_SupermatrixPartitions.nex --prefix brlen_5709taxa_malaise_tree

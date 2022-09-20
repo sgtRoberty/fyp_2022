@@ -1,0 +1,24 @@
+iqtree -s example.phy
+iqtree -s example.phy --prefix myprefix
+
+iqtree -s example.phy -m MFP [equivalent to iqtree -s example.phy]
+iqtree -s example.phy -m MF [to find the best-fit model without doing tree reconstruction]
+
+iqtree -s example.phy -cmax 15 [the maximum number of categories]
+iqtree -s example.phy -mset [WAG,LG] [to restrict the testing procedure to a subset of base models]
+iqtree -s example.phy -msub [for AA data sets] 
+-msub nuclear [only general AA models are included] 
+-msub viral [only AA models for viruses]
+
+iqtree -s coding_gene.phy -st CODON [using codon models]
+
+iqtree -s example.phy -m TIM2+I+G -B 1000 
+-bnni [to reduce the risk of overestimating branch supports with UFBoot due to severe model violations]
+-B [ultrafast bootstrap approximation]
+-b [standard nonparametric bootstrap]
+-alrt [single branch tests, specifies the number of bootstrap replicates for SH-aLRT]
+
+-T [number of CPU cores]
+-T AUTO [to determine the best number of cores]
+-ntmax [upper limit of number of CPU cores]
+

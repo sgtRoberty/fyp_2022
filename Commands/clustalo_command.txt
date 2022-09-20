@@ -1,0 +1,21 @@
+# aligned (all sequences have the same length and at least one sequence has at least one gap)
+
+# 5709taxa_GlobalMalaise_supermatrix.fasta
+clustalo --profile1=5709taxa_supermatrix.fasta --profile2=GlobalMalaise_aligned_noname.fasta --outfile=5709taxa_GlobalMalaise_supermatrix.fasta --threads=8 -v
+
+# 5709taxa_bibc_ecuador_supermatrix.fasta
+clustalo --profile1=../../5709taxa_supermatrix.fasta --infile=BIBC_sequences_2021-04-17.fasta --outfile=5709taxa_bibc_supermatrix.fasta --threads=8 -v
+clustalo --profile1=5709taxa_bibc_supermatrix.fasta --infile=Ecuador_barcodes.fasta --outfile=5709taxa_bibc_ecuadorbarcodes_supermatrix.fasta --threads=8 -v
+clustalo --profile1=5709taxa_bibc_ecuadorbarcodes_supermatrix.fasta --infile=Ecuador_otus.fasta --outfile=5709taxa_bibc_ecuador_supermatrix.fasta --threads=8 -v
+
+# 5709taxa_bibc_ecuador_supermatrix_new.fasta
+cat BIBC_sequences_2021-04-17.fasta Ecuador_barcodes.fasta Ecuador_otus.fasta > BIBC_Ecuadro_total_seqs.fasta
+clustalo --infile=BIBC_Ecuadro_total_seqs.fasta --outfile=BIBC_Ecuadro_total_seqs_aln.fasta --threads=10 -v
+clustalo --profile1=BIBC_Ecuadro_total_seqs_aln.fasta --profile2=../../5709taxa_supermatrix.fasta --outfile=5709taxa_bibc_ecuador_supermatrix_new.fasta --threads=10 -v
+
+# 5_aa_5682mito_bibc_ecuador_supermatrix.fasta
+clustalo --profile1=../../5_aa_supermatrix.fasta --infile=5_aa_bibc_ecuador_clean.fasta --outfile=5_aa_5682mito_bibc_ecuador_supermatrix.fasta --threads=10 -v
+
+# De-align GlobalMalaise_aligned_noname.fasta
+clustalo --dealign --infile=GlobalMalaise_aligned_noname.fasta --outfile=GlobalMalaise_unaligned_noname.fasta --threads=8 -v
+

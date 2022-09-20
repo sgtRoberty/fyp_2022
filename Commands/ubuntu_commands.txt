@@ -1,0 +1,21 @@
+orca.nhm.ac.uk
+/mbl/share/workspaces/groups/apv-students
+
+https://github.com/tjcreedy/pipelines 
+
+https://help.ubuntu.com/community/UsingTheTerminal 
+pwd: print working directory
+cd: navigate to home directory
+cd /: change directories
+ls: show you (‘list’) the files in your current directory
+cp -r <directory> <new directory name>: copy a directory
+rm -r <directory>
+mkdir: make a directory
+shift + insert: paste
+
+screen
+screen -ls
+screen -r <name>
+screen -S <name>
+screen -XS <name> quit
+screen -S <myjobname> <myCommand> <myInputFile>

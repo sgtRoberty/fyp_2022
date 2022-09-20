@@ -1,0 +1,77 @@
+execute <>.nex
+
+help lset [Specifying a model]
+lset nucmodel=4by4 [standard nucleotide substitution model]
+lset nst=6 [GTR model]
+lset rates=invgamma [gamma-shaped rate variation with a proportion of invariable sites]
+
+help prset [Setting the priors]
+prset revmatpr [six substitution rates of nucleotides]
+prset aarevmatpr [190 substitution rates of amino acids]
+prset statefreqpr [stationary nucleotide frequencies]
+prset shapepr [shape parameter of the gamma distribution of rate variation]
+prset pinvarpr [porpotion of invariable sites]
+prset topologypr [topology]
+	[if =Uniform equal probability on all distinct, fully resolved topologies]
+	[or introduce some constraints on the tree topology]
+prset brlenspr #branch length
+	[if =Fixed chosen branch lengths will be fixed to the current tree (requires a user-provided starting tree)]
+
+showmodel
+
+help mcmc
+mcmcp ngen=<number> [number of generations for which the analysis will be run]
+mcmcp nruns=2 [run two simultaneous, completely independent analyses starting from different random trees]
+mcmcp mcmcdiagn=yes diagnfreq=<number> [compare tree samples from the different runs; calculate various run diagnostics every diagnfreq=<number> generation
+	                                diagnostics printed to <Filename>.mcmc]
+                                       [a measure of the similarity of the tree samples in the different runs will also be printed to screen 
+                                        every diagnfreq=<number> generation]
+mcmc relburnin=yes/no [relative burnin; whether a fixed burnin (no) or a burnin percentage (yes) is used]
+mcmcp burnin=<number> [a fixed number of samples from the beginning of the chain is discarded]
+mcmc burninfrac=<number> [a percentage of samples from the beginning of the chain is discarded]
+
+mcmcp samplefreq=<number> [how oftern the chain is sampled; when the chain is sampled the current values of the model parameters are printed to file]
+			  [The substitution model parameters are printed to <Filename>.p; The tree topology and branch lengths to <Filename>.t]
+mcmcp printfreq=<number> [frequency with which brief info about the analysis is printed to screen]
+
+mcmcp startparams= [MrBayes creates starting values for model parameters. The starting values can be changed by startparams= command
+		    User-defined trees can be read into MrBayes by executing a Nexu file with a TREES block. The user trees can then be
+		    assigned to different chains using startparams= command.]
+
+mcmc [run the analysis]
+
+sump [summary of parameters]
+sumt conformat=simple [summary of trees]
+
+
+[What is burn-in?
+Burn-in is a colloquial term that describes the practice of throwing away some iterations at the beginning of an MCMC run. 
+The burn-in notion says you start somewhere, say at x, then you run the Markov chain for n steps, from which you throw away all the data (no output). 
+This is the burn-in period. After the burn-in you run normally, using each iterate in your MCMC calculations.
+Burn-in is intended to give the Markov Chain time to reach its equilibrium distribution, particularly if it has started from a lousy starting point. 
+To "burn in" a chain, you just discard the first n samples before you start collecting points.]
+
+[Metropolis coupling
+A single Markov chain was used in MCMC to explore the landscape of models and their parameter values. 
+A single chain, however, may get stuck in local optima, which results in less mixing and more time needed for convergence.]
+
+[Metropolis coupled Markov chain Monte Carlo [(MC)3] increases the number of Markov chains that explore the landscape of models and their parameters. 
+Not only are there more chains, but each one has a different temperature. The cold chain is the main chain and behaves as before. 
+The heated chains explore a landscape that is flatter than the landscape explored by the cold chain. 
+Therefore, it is easier for a heated chain to cross deep valleys in the landscape and not get stuck in local optima.]
+
+[After the chains independently explore the landscape for a certain number of generations, a proposal is made to swap the temperatures of two random chains. 
+If a swap involving the cold chain is successful, it will cause a previously heated chain to become the main chain. 
+As a result, a chain that is stuck in a local optimum may immediately jump to another area of the landscape.]
+
+
+5_aa_supermatrix.fasta [the amino acid supermatrix]
+5_aa_partitionscheme.nex [a nexus-format text file that contains the best partition and model scheme]
+5_backbone_v3_multifurcatingconsensus_2022-02-16_TJCauto_GBMID.tre [this is the multifurcating nuclear consensus that we would want to use as a constraint 
+								    in MrBayes - i.e. the relationships between the tips in this tree should always be conserved 
+								    (although of course multifurcations can be resolved)]
+5_backbone_mtaa.tre [this is the best mitochondrial tree that should form the basis of the starting tree]
+
+
+
+

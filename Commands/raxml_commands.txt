@@ -1,0 +1,153 @@
+##### RAxML examples #####
+Hands-On/
+
+raxmlHPC -m BINGAMMA -p 12345 -s Hands-On/binary.phy -n T1
+raxmlHPC -m GTRGAMMA -p 12345 -s Hands-On/dna.phy -# 20 -n T6
+raxmlHPC -m PROTGAMMAAUTO -p 12345 -s Hands-On/protein.phy -n AUTO
+
+# Generate 20 ML trees on distinct starting trees
+# Print the tree with the best likelihood to RAxML_bestTree.T13
+raxmlHPC -m GTRGAMMA -p 12345 -# 20 -s Hands-On/dna.phy -n T13
+
+# Get bootstrap support values for the best T13 tree
+# Compute bootstrap replicate trees, print to RAxML_bootstrap.T14
+raxmlHPC -m GTRGAMMA -p 12345 -b 12345 -# 100 -s Hands-On/dna.phy -n T14
+
+# Use T14 bootstrap replicates to draw bipartitions on the best ML T13 tree
+raxmlHPC -m GTRCAT -p 12345 -f b -t RAxML_bestTree.T13 -z RAxML_bootstrap.T14 -n T15
+
+# Use T14 bootstrap replicates to build consensus trees
+# E.g., strict, majority rule, and extended majority rule consenus trees
+raxmlHPC -m GTRCAT -J STRICT -z RAxML_bootstrap.T14 -n T16
+raxmlHPC -m GTRCAT -J MR -z RAxML_bootstrap.T14 -n T17
+raxmlHPC -m GTRCAT -J MRE -z RAxML_bootstrap.T14 -n T18
+
+
+raxmlHPC-PTHREADS -T 2 -p 12345 -m PROTGAMMAWAG -s Hands-On/protein.phy -n T27
+raxmlHPC-SSE3 -p12345 -r Hands-On/backboneConstraint.txt -m GTRGAMMA -s Hands-On/dna.phy -n T28
+
+
+##### Tree Building #####
+raxmlHPC-PTHREADS-AVX2 -T <threads> -m GTRGAMMA -p 12345 -s 5_aa_supermatrix_raxml.fasta -q <partitions> -g <constraint> -# <n bootstraps> -k -w <working directory> -n <prefix>
+# 1000 subset data
+raxmlHPC-PTHREADS-AVX2 -T 8 -m PROTGAMMAAUTO -p 12345 -s 5_aa_supermatrix_1000subset_raxml.fasta -r 5_backbone_mtaa.tre -n 1000subset_auto
+raxmlHPC-PTHREADS-AVX2 -T 8 -m PROTGAMMADAYHOFFF -p 12345 -s 5_aa_supermatrix_1000subset_raxml.fasta -r 5_backbone_mtaa.tre -n 1000subset_dayhofff
+
+##### Estimate branch lengths for 5709taxa_GlobalMalaise_supermatrix.fasta & malaise_noname.tre #####
+raxmlHPC-PTHREADS-AVX2 -T 16 -f e -t malaise_noname.tre -m 5709taxa_SupermatrixPartitionsRAxML.txt -s 5709taxa_GlobalMalaise_supermatrix.fasta -n brlen_5709taxa_malaise
+
+
+##### RAxML-ng tutorial #####
+# Preparing the alignment
+raxml-ng --check --msa prim.phy --model GTR+G --prefix T1
+raxml-ng --parse --msa prim.phy --model GTR+G --prefix T2
+# Tree inference
+raxml-ng --msa prim.phy --model GTR+G --prefix T3 --threads 2 --seed 2
+raxml-ng --msa prim.phy --model GTR+G --prefix T4 --threads 2 --seed 2 --tree pars{25},rand{25}
+raxml-ng --search1 --msa prim.phy --model GTR+G --prefix T5 --threads 2 --seed 2
+
+grep "Final LogLikelihood:" T{3,4,5}.raxml.log
+cat T{3,4}.raxml.mlTrees T5.raxml.bestTree > mltrees
+raxml-ng --rfdist --tree mltrees --prefix RF 
+
+raxml-ng --msa fusob.phy --model GTR+G --prefix T6 --seed 2 --threads 2
+grep "ML tree search #" T6.raxml.log
+raxml-ng --rfdist --tree T6.raxml.mlTrees --prefix RF6
+cat RF6.raxml.rfDistances
+
+
+## Bootstrapping 
+# By default, RAxML-NG will perform MRE-based bootstopping test after every 50 replicates
+# terminate once the diagnostic statistics drops below the cutoff value: 0.030000
+raxml-ng --bootstrap --msa prim.phy --model GTR+G --prefix T7 --seed 2 --threads 2
+raxml-ng --bootstrap --msa prim.phy --model GTR+G --prefix T8 --seed 2 --threads 2 --bs-trees 200
+# Post-hoc test of bootstrap convergence
+raxml-ng --bsconverge --bs-trees T7.raxml.bootstraps --prefix T9 --seed 2 --threads 2 --bs-cutoff 0.01
+raxml-ng --bsconverge --bs-trees T8.raxml.bootstraps --prefix T10 --seed 2 --threads 2  --bs-cutoff 0.01
+
+# Another 400 bootstraps
+raxml-ng --bootstrap --msa prim.phy --model GTR+G --prefix T11 --seed 333 --threads 2 --bs-trees 400
+cat T8.raxml.bootstraps T11.raxml.bootstraps > allbootstraps
+raxml-ng --bsconverge --bs-trees allbootstraps --prefix T12 --seed 2 --threads 1 --bs-cutoff 0.01
+
+## Compute branch support
+# Summarise bootstrap trees via consensus tree (e.g., strict, majority, majority rule extended)
+# Map the BS support values onto the best-scoring/best-known ML tree
+raxml-ng --support --tree T3.raxml.bestTree --bs-trees allbootstraps --prefix T13 --threads 2 
+cat T13.raxml.support
+# Compute Transfer Bootstrap Expectation support metric
+raxml-ng --support --tree T3.raxml.bestTree --bs-trees allbootstraps --prefix T14 --threads 2 --bs-metric tbe
+
+## All analysis in one command:
+raxml-ng --all --msa prim.phy --model GTR+G --prefix T15 --seed 2 --threads 2 --bs-metric fbp,tbe
+
+## Tree likelihood evaluation
+raxml-ng --evaluate --msa prim.phy --threads 2 --model JC --tree T3.raxml.bestTree --prefix E1
+raxml-ng --evaluate --msa prim.phy --threads 2 --model JC+G --tree T3.raxml.bestTree --prefix E2
+raxml-ng --evaluate --msa prim.phy --threads 2 --model GTR --tree T3.raxml.bestTree --prefix E3
+raxml-ng --evaluate --msa prim.phy --threads 2 --model GTR+G+FC --tree T3.raxml.bestTree --prefix E4
+raxml-ng --evaluate --msa prim.phy --threads 2 --model GTR+G+FO --tree T3.raxml.bestTree --prefix E5
+raxml-ng --evaluate --msa prim.phy --threads 2 --model GTR+R4+FO --tree T3.raxml.bestTree --prefix E6
+grep logLikelihood E*.raxml.log
+grep "AIC score" E*.raxml.log
+
+## Partitioned analysis
+cat prim.part
+cat prim2.part 
+
+## Likelihood evaluation with partitioned models
+raxml-ng --evaluate --msa prim.phy --threads 2 --model prim.part --tree T3.raxml.bestTree --prefix P1 -log verbose
+raxml-ng --evaluate --msa prim.phy --threads 2 --model prim2.part --tree T3.raxml.bestTree --prefix P2 -log verbose
+grep logLikelihood {E5,P1,P2}.raxml.log
+grep "Free parameters" {E5,P1,P2}.raxml.log
+grep "AIC score" {E5,P1,P2}.raxml.log
+
+## Branch length linkage
+raxml-ng --evaluate --msa prim.phy --threads 2 --model prim.part --tree T3.raxml.bestTree --prefix P3 --brlen linked
+raxml-ng --evaluate --msa prim.phy --threads 2 --model prim.part --tree T3.raxml.bestTree --prefix P4 --brlen unlinked
+grep logLikelihood {P1,P3,P4}.raxml.log
+grep "AIC score" {P1,P3,P4}.raxml.log
+
+## Tree search with partitioned models
+raxml-ng --msa prim.phy --model prim.part --prefix P5 --threads 2 --seed 2 --brlen scaled
+raxml-ng --msa prim.phy --model prim.part --prefix P6 --threads 2 --seed 2 --brlen linked
+raxml-ng --msa prim.phy --model prim.part --prefix P7 --threads 2 --seed 2 --brlen unlinked
+grep "Final LogLikelihood" {P5,P6,P7}.raxml.log
+
+## RAxML-ng tree building
+raxml-ng --parse --msa 5_aa_supermatrix_1000subset_raw.fasta --model 5_aa_partitionscheme.part --prefix 1000subset_parse
+raxml-ng --msa 5_aa_supermatrix_1000subset_raw.fasta --model 5_aa_partitionscheme.part --prefix 1000subset_testrun_starttree_constr_part --seed 123 --tree 5_backbone_mtaa.tre --tree-constraint 5_backbone_v3_multifurcatingconsensus_2022-02-16_TJCauto_GBMID.tre
+raxml-ng --msa 5_aa_supermatrix_1000subset_raw.fasta --model 5_aa_partitionscheme.part --prefix 1000subset_testrun_nostarttree_constr_part --seed 123 --tree-constraint 5_backbone_v3_multifurcatingconsensus_2022-02-16_TJCauto_GBMID.tre
+raxml-ng --msa 1000subset_parse.raxml.rba --prefix 1000subset_readrba_test --seed 123
+
+raxml-ng --parse --msa ../5_aa_supermatrix.fasta --model 5_aa_partitionscheme.part --prefix allmito_parse
+
+##### 5_aa_supermatrix.fasta #####
+# CIPRES
+raxml-ng --threads 120 --force perf_threads -msa infile.txt --workers 10 --bs-trees autoMRE{1000} --seed 123 --all --model part.txt --tree rand{5} --bs-metric fbp,tbe --log VERBOSE --tree-constraint constraint.tre --prefix allmito_nostarttree_constr_part
+# Franklin, continued from checkpoint
+raxml-ng --threads auto{12} --workers auto{4} --msa allmito_nostarttree_constr_part.raxml.rba --bs-trees autoMRE{1000} --seed 123 --all --tree rand{5} --bs-metric fbp,tbe --log VERBOSE --tree-constraint constraint.tre --prefix allmito_nostarttree_constr_part
+# Rename the rand{5} starting tree file to allmito_nostarttree_constr_part.raxml.startTree_old, set starting tree to rand{1}, --bs-metric to TBE only
+raxml-ng --threads auto{12} --workers auto{4} --msa allmito_nostarttree_constr_part.raxml.rba --bs-trees autoMRE{1000} --seed 123 --all --tree rand{1} --bs-metric tbe --log VERBOSE --tree-constraint constraint.tre --prefix allmito_nostarttree_constr_part
+
+##### 5709taxa_bibc_ecuador_supermatrix.fasta #####
+raxml-ng --parse --msa 5709taxa_bibc_ecuador_supermatrix_new_RN.fasta --model 5709taxa_bibc_ecuador_SupermatrixPartitionsRAxML.txt --log VERBOSE --prefix parse_allmito_bibc_ecuador_new_RN
+raxml-ng --threads auto{12} --workers auto{4} --search1 --msa parse_allmito_bibc_ecuador_new_RN.raxml.rba --seed 123 --log VERBOSE --tree-constraint RAxML_bestTree.bibc_seq_out.tre --prefix allmito_bibc_ecuador
+
+##### Duplicate sequences in Ecuador barcodes #####
+raxml-ng --parse --msa 5709taxa_bibc_ecuador_supermatrix.fasta --model ../5709taxa_bibc_ecuador_SupermatrixPartitionsRAxML.txt --log VERBOSE --prefix duplicates_ecuador_barcodes
+
+##### 5_aa_5682mito_bibc_ecuador_supermatrix.fasta #####
+raxml-ng --parse --msa 5_aa_5682mito_bibc_ecuador_supermatrix.fasta --model 5_aa_5682mito_bibc_ecuador_partitionscheme.part --log VERBOSE --prefix parse_5_aa_5682mito_bibc_ecuador_supermatrix
+# CIPRES
+raxml-ng --threads 120 --force perf_threads -msa infile.txt --workers 10 --bs-trees autoMRE{1000} --seed 123 --all --model part.txt --tree rand{1} --bs-metric tbe --log VERBOSE --tree-constraint constraint.tre --prefix 6_aa_5682aaMito_bibc_Ecuador
+# Franklin
+raxml-ng --threads auto{24} --workers auto{4} -msa 6_aa_5682aaMito_bibc_Ecuador.raxml.rba --bs-trees autoMRE{1000} --seed 123 --all --tree rand{1} --bs-metric tbe --log VERBOSE --tree-constraint constraint.tre --prefix 6_aa_5682aaMito_bibc_Ecuador
+
+##### Estimate branch lengths for 5709taxa_GlobalMalaise_supermatrix.fasta & malaise_noname.tre #####
+raxml-ng --parse --msa ../../5709taxa_GlobalMalaise_supermatrix.fasta --model ../../5709taxa_SupermatrixPartitionsRAxML.txt --prefix parse_5709taxa_malaise
+raxml-ng --threads auto{16} --workers auto{4} --evaluate --msa ../../5709taxa_GlobalMalaise_supermatrix.fasta --model ../../5709taxa_SupermatrixPartitionsRAxML.txt --tree ../../malaise_noname.tre --log VERBOSE --prefix brlen_5709taxa_malaise
+
+
+raxml-ng --parse --msa aa_supermatrix_Coleop.fasta --model JC --log VERBOSE --prefix parse_JC_aa_supermatrix_Coleop
+raxml-ng --parse --msa aa_supermatrix_Coleop_raxml.fasta --model JC --log VERBOSE --prefix parse_JC_aa_supermatrix_Coleop

@@ -1,0 +1,7 @@
+mpirun -np 4 mb-mpi tree_analysis.nex > log_mpi_test.txt &
+mpirun -np 4 mrbayes5d-mpi tree_analysis_5d.nex > log_5d_test.txt &
+
+mpirun -np 8 mb-mpi tree_analysis.nex > log_mpi_test.txt &
+mpirun -np 8 mrbayes5d-mpi tree_analysis_5d.nex > log_5d_test.txt &
+
+mpirun -np 8 mb-mpi tree_analysis_5000taxa.nex > log_5000taxa.txt &

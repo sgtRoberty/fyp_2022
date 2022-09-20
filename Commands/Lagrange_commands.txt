@@ -1,0 +1,37 @@
+# Install python version
+pip install git+https://github.com/rhr/lagrange-python.git
+pip list
+
+# Open python IDLE in Anaconda Prompt
+IDLE
+
+# Use Lagrange in python
+import os
+import lagrange
+os.getcwd()
+os.chdir()
+exec(open(filename.py).read())
+
+# Execute Lagrange from terminal
+python filename.py
+
+# Install Lagrange-ng version
+git clone https://github.com/computations/lagrange-ng.git
+# "/tools" directory:
+git clone https://github.com/computations/lagrange_tools.git tools
+# "deps/nlopt" directory:
+git clone https://github.com/stevengj/nlopt.git nlopt
+
+make -f makefile
+
+# Install BioGeoBEARS via devtools in R
+/home/haoby/conda/envs/r_env/lib/R/library/
+
+install.packages(c("rexpokit", "cladoRcpp"), lib = "/home/haoby/conda/envs/r_env/lib/R/library", dependencies=TRUE)
+install.packages("devtools", lib = "/home/haoby/conda/envs/r_env/lib/R/library")
+library(devtools)
+devtools::install_github(repo = "nmatzke/BioGeoBEARS", 
+                         INSTALL_opts = "--byte-compile", 
+                         dependencies = F,
+                         lib = "/home/haoby/conda/envs/r_env/lib/R/library/")
+						 

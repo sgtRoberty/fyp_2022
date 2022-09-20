@@ -1,0 +1,5 @@
+rapidnj -h
+rapidnj 5_aa_supermatrix.fasta -v -i fa -o t -c 4 -t p -x rapidnj_test_5000taxa.txt
+rapidnj 5_aa_supermatrix.fasta -v -i fa -o t -c 4 -b 1000 -t p -x rapidnj_test_5000taxa_bs.txt
+
+rapidnj 5_aa_supermatrix.fasta -v -i fa -o t -c 4 -t p -n -x rapidnj_test_5000taxa_noneg.txt

@@ -1,0 +1,4 @@
+esl-reformat -o 5_aa_supermatrix.sto stockholm 5_aa_supermatrix.fasta
+
+quicktree -in a -out t -boot 1000 5_aa_supermatrix.sto
+quicktree -in a -out t 5_aa_supermatrix.sto

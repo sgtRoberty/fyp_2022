@@ -1,0 +1,20 @@
+# Download bamm repository
+git clone https://github.com/macroevolution/bamm.git BAMM
+mkdir build
+cd build
+cmake ..
+make -j
+chmod u+x bamm
+
+# Whales example analysis
+../BAMM/build/bamm -c divcontrol.txt
+
+# aa_5682mito_Malaysia
+../BAMM/build/bamm -c aa_5682mito_Malaysia_diversification.txt
+# aa_5682mito_Panama
+../BAMM/build/bamm -c aa_5682mito_Panama_diversification.txt
+# aa_5682mito_all
+../BAMM/build/bamm -c aa_5682mito_all_diversification.txt
+
+
+../bamm -c aa_5682mito_all_diversification.txt

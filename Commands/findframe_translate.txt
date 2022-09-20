@@ -1,0 +1,12 @@
+
+/robert_project_source/raxml_ng/5709mito_bibc_ecuador/old_clustal_output/BIBC_Ecuadro_total_seqs.fasta
+/robert_project_source/5_aa_supermatrix.fasta
+
+# TRANSLATION
+
+python findframe.py -t 5 -u -r ../../5_aa_supermatrix.fasta -s < ../../raxml_ng/5709mito_bibc_ecuador/old_clustal_output/BIBC_Ecuadro_total_seqs.fasta | python translate.py 5 > ../../5_aa_bibc_ecuador.fasta
+# Note that the translated files will have a frame tag added to the header of each sequence
+
+python findframe.py -t 5 -u -r ../../5_aa_supermatrix.fasta -s < ../../BIBC_reps_test.fasta | python translate.py 5 > ../../aa_BIBC_reps_test.fasta
+python findframe.py -t 5 -u -r ../../5_aa_supermatrix.fasta -s < ../../BIBC_reps_test.fasta | python translate.py 5 -s > ../../aa_BIBC_reps_test_notag.fasta
+
