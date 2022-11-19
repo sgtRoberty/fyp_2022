@@ -3,6 +3,6 @@ message: "If you use any of my code, please cite it as below."
 authors:
 - family-names: "Yuan"
   given-names: "Haobo"
-title: "fyp_2022"
+title: "Beetle evolution project 2022 code repository"
 date-released: 2022-6-9
 url: "https://github.com/sgtRoberty/fyp_2022"
