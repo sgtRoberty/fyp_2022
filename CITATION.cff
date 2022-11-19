@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use any of my code, please cite it as below."
+authors:
+- family-names: "Yuan"
+  given-names: "Haobo"
+title: "fyp_2022"
+version: 1.0.0
+date-released: 2022-6-9
+url: "https://github.com/sgtRoberty/fyp_2022"
