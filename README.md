@@ -5,4 +5,4 @@ Imperial College London and Natural History Museum
 
 Supervisors: Prof Alfried Volger and Dr Thomas Creedy
 
-Available at: http://dx.doi.org/10.13140/RG.2.2.35623.21923.
+Dissertation is available at: http://dx.doi.org/10.13140/RG.2.2.35623.21923.
