@@ -1,7 +1,8 @@
-# Final year project 2022
-TITILE: Phylogenetic diversity in the most species-rich rainforests on Earth
+# Beetle evolution project 2022 code repository
+Title: Phylogenetic diversity in the most species-rich rainforests on Earth
 
-Imperial College London
-Natural History Museum
+Imperial College London and Natural History Museum
 
 Supervisors: Prof Alfried Volger and Dr Thomas Creedy
+
+Available at: http://dx.doi.org/10.13140/RG.2.2.35623.21923.
